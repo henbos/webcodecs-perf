@@ -1,0 +1,31 @@
+<html>
+<meta charset="utf-8">
+
+<head>
+  <title>WebCodecs Performance Test</title>
+  <style>
+    html {
+      font-family: Lato;
+    }
+
+    .buttons {
+      margin: 2em 0;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>WebCodecs encoding performance test</h1>
+  <p>Number of encoders: <input type="number" id="encoder-number" value="3"></p>
+  <div class="buttons">
+    <button type="button" id="start-encoding">Start encoding</button>
+  </div>
+  <p id="stats"></p>
+  <div>
+    <video id="local-preview" controls width="320" height="240"></video>
+  </div>
+  <script type="module" src="js/encoding.mjs"></script>
+</body>
+<link href='http://fonts.googleapis.com/css?family=Lato' rel='stylesheet' type='text/css'>
+
+</html>
