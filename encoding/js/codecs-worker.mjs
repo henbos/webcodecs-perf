@@ -11,7 +11,7 @@ addEventListener('message', (event) => {
   const [messageType, args] = event.data;
   switch (messageType) {
     case 'add-encoder':
-      addEncoder();
+      addEncoder(...args);
       break;
     case 'raw-frame':
       onRawFrame(...args);
@@ -33,20 +33,22 @@ function onRawFrame(frame) {
   frame.close();
 }
 
-function addEncoder() {
+function addEncoder(codec) {
   const encoder = new VideoEncoder({
     output: videoChunkOutputCallback.bind(null, encodings.length),
     error: encoderErrorCallback
   });
-  encoder.configure({
-    // codec: 'avc1.4d002a',
-    codec: 'av01.0.00M.08',
-    width: 1280,
-    height: 720,
+  const encoderConfig = {
+    codec: codec,
+    width: 640,
+    height: 360,
     framerate: 30,
     latencyMode: 'realtime',
-    //avc: {format: 'annexb'},
-  });
+  };
+  if (codec.startsWith('avc1.')) {
+    encoderConfig.avc = {format: 'annexb'};
+  }
+  encoder.configure(encoderConfig);
   const encoding = {
     encoder,
     captureTime: new Array(recordNumber).fill(0),

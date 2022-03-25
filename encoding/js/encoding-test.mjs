@@ -1,9 +1,15 @@
 'use strict'
 
+// Each item is an array of 2 strings: [display name, codec string].
+// Codec string is defined in WebCodecs Codec Registry
+// https://www.w3.org/TR/webcodecs-codec-registry/.
+const codecList =
+    [['H.264', 'avc1.4d002a'], ['AV1', 'av01.0.00M.08'], ['VP8', 'vp8']];
+
 export class EncodingTest {
   constructor() {
     this._mediaStream = null;
-    this._worker = new Worker('js/codecs-worker.mjs?r=14', {type: 'module'});
+    this._worker = new Worker('js/codecs-worker.mjs?r=15', {type: 'module'});
     this.bindEventHandlers();
   }
 
@@ -13,7 +19,8 @@ export class EncodingTest {
       switch (messageType) {
         case 'stats':
           this.updateStats(...args);
-          break;;
+          break;
+          ;
         default:
           console.warn('Unknown message ' + JSON.stringify(event.data));
       }
@@ -28,22 +35,20 @@ export class EncodingTest {
     this._mediaStream = await navigator.mediaDevices.getUserMedia({
       audio: false,
       video: {
-        width: 1280,
-        height: 720,
+        width: 640,
+        height: 360,
       }
     });
-    const videoElement = document.getElementById('local-preview');
-    videoElement.srcObject = this._mediaStream;
-    videoElement.play();
+    return this._mediaStream;
   }
 
-  _addAnEncoder() {
-    this._worker.postMessage(['add-encoder']);
+  _addAnEncoder(codec) {
+    this._worker.postMessage(['add-encoder', [codec]]);
   }
 
-  addEncoders(num) {
+  addEncoders(codec, num) {
     for (let i = 0; i < num; i++) {
-      this._addAnEncoder();
+      this._addAnEncoder(codec);
     }
   }
 
@@ -59,5 +64,9 @@ export class EncodingTest {
       }
       this._worker.postMessage(['raw-frame', [value]], [value]);
     }
+  }
+
+  codecList() {
+    return codecList;
   }
 }
