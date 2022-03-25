@@ -40,8 +40,8 @@ function addEncoder(codec) {
   });
   const encoderConfig = {
     codec: codec,
-    width: 640,
-    height: 360,
+    width: 1280,
+    height: 720,
     framerate: 30,
     latencyMode: 'realtime',
   };

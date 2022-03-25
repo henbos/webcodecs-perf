@@ -35,8 +35,8 @@ export class EncodingTest {
     this._mediaStream = await navigator.mediaDevices.getUserMedia({
       audio: false,
       video: {
-        width: 640,
-        height: 360,
+        width: 1280,
+        height: 720,
       }
     });
     return this._mediaStream;
