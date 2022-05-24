@@ -7,6 +7,9 @@ let firstFrame = true;
 const encodings = [];
 const recordNumber = 300;
 
+const resolutions = [[1280, 720], [640, 360], [320, 180]];
+let resolutionsIndex = 0;
+
 addEventListener('message', (event) => {
   const [messageType, args] = event.data;
   switch (messageType) {
@@ -40,11 +43,13 @@ function addEncoder(codec) {
   });
   const encoderConfig = {
     codec: codec,
-    width: 1280,
-    height: 720,
+    width: resolutions[resolutionsIndex][0],
+    height: resolutions[resolutionsIndex][1],
     framerate: 30,
     latencyMode: 'realtime',
   };
+  resolutionsIndex += 1;
+  resolutionsIndex = resolutionsIndex % resolutions.length;
   if (codec.startsWith('avc1.')) {
     encoderConfig.avc = {format: 'annexb'};
   }

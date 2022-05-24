@@ -9,7 +9,7 @@ const codecList =
 export class EncodingTest {
   constructor() {
     this._mediaStream = null;
-    this._worker = new Worker('js/codecs-worker.mjs?r=15', {type: 'module'});
+    this._worker = new Worker('js/codecs-worker.mjs?r=19', {type: 'module'});
     this.bindEventHandlers();
   }
 
