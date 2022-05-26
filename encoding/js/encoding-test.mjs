@@ -6,6 +6,11 @@
 const codecList =
     [['H.264', 'avc1.4d002a'], ['AV1', 'av01.0.00M.08'], ['VP8', 'vp8']];
 
+const resolutionList = [
+  ['720p', [[1280, 720]]],
+  ['720p, 360p, 180p', [[1280, 720], [640, 360], [320, 180]]]
+];
+
 export class EncodingTest {
   constructor() {
     this._mediaStream = null;
@@ -42,6 +47,11 @@ export class EncodingTest {
     return this._mediaStream;
   }
 
+  setResolutions(resolutionsIndex) {
+    this._worker.postMessage(
+        ['resolutions', [resolutionList[resolutionsIndex][1]]]);
+  }
+
   _addAnEncoder(codec) {
     this._worker.postMessage(['add-encoder', [codec]]);
   }
@@ -68,5 +78,9 @@ export class EncodingTest {
 
   codecList() {
     return codecList;
+  }
+
+  resolutionList() {
+    return resolutionList;
   }
 }

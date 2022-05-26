@@ -7,12 +7,15 @@ let firstFrame = true;
 const encodings = [];
 const recordNumber = 300;
 
-const resolutions = [[1280, 720], [640, 360], [320, 180]];
+let resolutions = [[1280, 720], [640, 360], [320, 180]];
 let resolutionsIndex = 0;
 
 addEventListener('message', (event) => {
   const [messageType, args] = event.data;
   switch (messageType) {
+    case 'resolutions':
+      updateResolutions(...args);
+      break;
     case 'add-encoder':
       addEncoder(...args);
       break;
@@ -23,6 +26,15 @@ addEventListener('message', (event) => {
       console.warn('Unknown message ' + JSON.stringify(event.data));
   }
 });
+
+function updateResolutions(newResolutions) {
+  if (encodings.length != 0) {
+    console.warn(
+        'Existing encoders are impacted by updating the resolution list.');
+  }
+  resolutions = newResolutions;
+  resolutionsIndex = 0;
+}
 
 function onRawFrame(frame) {
   for (let i = 0; i < encodings.length; i++) {
