@@ -16,7 +16,7 @@ const scalabilityModeList = ['L1T1', 'L1T2'];
 export class EncodingTest {
   constructor() {
     this._mediaStream = null;
-    this._worker = new Worker('js/codecs-worker.mjs?r=21', {type: 'module'});
+    this._worker = new Worker('js/codecs-worker.mjs?r=24', {type: 'module'});
     this.bindEventHandlers();
   }
 
@@ -27,7 +27,6 @@ export class EncodingTest {
         case 'stats':
           this.updateStats(...args);
           break;
-          ;
         default:
           console.warn('Unknown message ' + JSON.stringify(event.data));
       }

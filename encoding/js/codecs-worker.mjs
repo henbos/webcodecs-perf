@@ -3,7 +3,7 @@
 let initialized = false;
 let firstFrame = true;
 // Each item in encodings is an object
-// like {encoder:VideoEncoder,captureTime:[DateTime],captureTimeIndex:number,encodedTime:[DateTime],encodedTimeIndex:number}.
+// like {encoder:VideoEncoder,captureTime:[DateTime],captureTimeIndex:number,encodedTime:[DateTime],encodedTimeIndex:number,firstFrameDelay:number}.
 const encodings = [];
 const recordNumber = 300;
 
@@ -80,6 +80,7 @@ function addEncoder(codec) {
     captureTimeIndex: 0,
     encodedTime: new Array(recordNumber).fill(0),
     encodedTimeIndex: 0,
+    firstFrameDelay: null,
   };
   encodings.push(encoding);
   if (!initialized) {
@@ -111,6 +112,10 @@ function printStats() {
     for (let i = 0; i < encodings.length; i++) {
       str += `${calculateAverageEncodingTime(i).toFixed(2)}, `;
     }
+    str += '\nFirst frame delay: ';
+    for (let i = 0; i < encodings.length; i++) {
+      str += `${encodings[i].firstFrameDelay?.toFixed(2)}, `;
+    }
     postMessage(['stats', [str]]);
   }, 1000);
 }
@@ -119,6 +124,10 @@ function videoChunkOutputCallback(encoderIndex, chunk, metadata) {
   const encoding = encodings[encoderIndex];
   encoding.encodedTime[(encoding.encodedTimeIndex++) % recordNumber] =
       Date.now();
+  if (!encoding.firstFrameDelay) {
+    encoding.firstFrameDelay =
+        encoding.encodedTime[0] - encoding.captureTime[0];
+  }
 }
 
 function encoderErrorCallback(error) {
