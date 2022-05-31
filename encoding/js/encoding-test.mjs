@@ -3,8 +3,10 @@
 // Each item is an array of 2 strings: [display name, codec string].
 // Codec string is defined in WebCodecs Codec Registry
 // https://www.w3.org/TR/webcodecs-codec-registry/.
-const codecList =
-    [['H.264', 'avc1.4d002a'], ['AV1', 'av01.0.00M.08'], ['VP8', 'vp8']];
+const codecList = [
+  ['H.264 High', 'avc1.640028'], ['H.264 Main', 'avc1.4d002a'],
+  ['AV1', 'av01.0.00M.08'], ['VP8', 'vp8']
+];
 
 const resolutionList = [
   ['720p', [[1280, 720]]],
