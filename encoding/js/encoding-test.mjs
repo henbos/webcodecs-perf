@@ -11,10 +11,12 @@ const resolutionList = [
   ['720p, 360p, 180p', [[1280, 720], [640, 360], [320, 180]]]
 ];
 
+const scalabilityModeList = ['L1T1', 'L1T2'];
+
 export class EncodingTest {
   constructor() {
     this._mediaStream = null;
-    this._worker = new Worker('js/codecs-worker.mjs?r=19', {type: 'module'});
+    this._worker = new Worker('js/codecs-worker.mjs?r=21', {type: 'module'});
     this.bindEventHandlers();
   }
 
@@ -47,9 +49,9 @@ export class EncodingTest {
     return this._mediaStream;
   }
 
-  setResolutions(resolutionsIndex) {
+  configure(resolutionsIndex, scalabilityMode){
     this._worker.postMessage(
-        ['resolutions', [resolutionList[resolutionsIndex][1]]]);
+        ['configure', [resolutionList[resolutionsIndex][1], scalabilityMode]]);
   }
 
   _addAnEncoder(codec) {
@@ -82,5 +84,9 @@ export class EncodingTest {
 
   resolutionList() {
     return resolutionList;
+  }
+
+  scalabilityModeList() {
+    return scalabilityModeList;
   }
 }

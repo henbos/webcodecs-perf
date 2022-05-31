@@ -9,12 +9,13 @@ const recordNumber = 300;
 
 let resolutions = [[1280, 720], [640, 360], [320, 180]];
 let resolutionsIndex = 0;
+let scalabilityMode;
 
 addEventListener('message', (event) => {
   const [messageType, args] = event.data;
   switch (messageType) {
-    case 'resolutions':
-      updateResolutions(...args);
+    case 'configure':
+      configure(...args);
       break;
     case 'add-encoder':
       addEncoder(...args);
@@ -26,6 +27,12 @@ addEventListener('message', (event) => {
       console.warn('Unknown message ' + JSON.stringify(event.data));
   }
 });
+
+function configure(newResolutions, newScalabilityMode) {
+  updateResolutions(newResolutions);
+  scalabilityMode =
+      newScalabilityMode == 'L1T1' ? undefined : newScalabilityMode;
+}
 
 function updateResolutions(newResolutions) {
   if (encodings.length != 0) {
@@ -59,6 +66,7 @@ function addEncoder(codec) {
     height: resolutions[resolutionsIndex][1],
     framerate: 30,
     latencyMode: 'realtime',
+    scalabilityMode,
   };
   resolutionsIndex += 1;
   resolutionsIndex = resolutionsIndex % resolutions.length;

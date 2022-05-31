@@ -7,8 +7,9 @@ const encodingTest = new EncodingTest();
 document.getElementById('start-encoding')
     .addEventListener('click', async () => {
       const mediaStream = await encodingTest.initMediaStream();
-      encodingTest.setResolutions(
-          document.getElementById('resolutions-select').value);
+      encodingTest.configure(
+          document.getElementById('resolutions-select').value,
+          document.getElementById('scalability-select').value);
       const videoElement = document.getElementById('local-preview');
       videoElement.srcObject = mediaStream;
       videoElement.play();
@@ -37,4 +38,13 @@ for (const [name, _] of resolutionList) {
   option.value = resolutionIndex;
   resolutionSelectElement.add(option);
   resolutionIndex += 1;
+}
+
+const scalabilityModeList = encodingTest.scalabilityModeList();
+const scalabilitySelectElement = document.getElementById('scalability-select');
+for (const name of scalabilityModeList) {
+  const option = document.createElement('option');
+  option.text = name;
+  option.value = name;
+  scalabilitySelectElement.add(option);
 }
