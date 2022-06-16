@@ -9,7 +9,8 @@ document.getElementById('start-encoding')
       const mediaStream = await encodingTest.initMediaStream();
       encodingTest.configure(
           document.getElementById('resolutions-select').value,
-          document.getElementById('scalability-select').value);
+          document.getElementById('scalability-select').value,
+          document.getElementById('hw-select').value);
       const videoElement = document.getElementById('local-preview');
       videoElement.srcObject = mediaStream;
       videoElement.play();
@@ -47,4 +48,13 @@ for (const name of scalabilityModeList) {
   option.text = name;
   option.value = name;
   scalabilitySelectElement.add(option);
+}
+
+const hardwareAccelerationList = encodingTest.hardwareAccelerationList();
+const hardwareAccelerationSelectElement = document.getElementById('hw-select');
+for (const name of hardwareAccelerationList) {
+  const option = document.createElement('option');
+  option.text = name;
+  option.value = name;
+  hardwareAccelerationSelectElement.add(option);
 }

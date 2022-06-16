@@ -10,6 +10,7 @@ const recordNumber = 300;
 let resolutions = [[1280, 720], [640, 360], [320, 180]];
 let resolutionsIndex = 0;
 let scalabilityMode;
+let hardwareAcceleration;
 
 addEventListener('message', (event) => {
   const [messageType, args] = event.data;
@@ -28,10 +29,12 @@ addEventListener('message', (event) => {
   }
 });
 
-function configure(newResolutions, newScalabilityMode) {
+function configure(
+    newResolutions, newScalabilityMode, newHardwareAcceleration) {
   updateResolutions(newResolutions);
   scalabilityMode =
       newScalabilityMode == 'L1T1' ? undefined : newScalabilityMode;
+  hardwareAcceleration = newHardwareAcceleration;
 }
 
 function updateResolutions(newResolutions) {
@@ -67,6 +70,7 @@ function addEncoder(codec) {
     framerate: 30,
     latencyMode: 'realtime',
     scalabilityMode,
+    hardwareAcceleration,
   };
   resolutionsIndex += 1;
   resolutionsIndex = resolutionsIndex % resolutions.length;

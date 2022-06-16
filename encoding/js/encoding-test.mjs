@@ -15,10 +15,13 @@ const resolutionList = [
 
 const scalabilityModeList = ['L1T1', 'L1T2'];
 
+const hardwareAccelerationList =
+    ['no-preference', 'prefer-hardware', 'prefer-software'];
+
 export class EncodingTest {
   constructor() {
     this._mediaStream = null;
-    this._worker = new Worker('js/codecs-worker.mjs?r=28', {type: 'module'});
+    this._worker = new Worker('js/codecs-worker.mjs?r=29', {type: 'module'});
     this.bindEventHandlers();
   }
 
@@ -50,9 +53,14 @@ export class EncodingTest {
     return this._mediaStream;
   }
 
-  configure(resolutionsIndex, scalabilityMode){
-    this._worker.postMessage(
-        ['configure', [resolutionList[resolutionsIndex][1], scalabilityMode]]);
+  configure(resolutionsIndex, scalabilityMode, hardwareAcceleration) {
+    this._worker.postMessage([
+      'configure',
+      [
+        resolutionList[resolutionsIndex][1], scalabilityMode,
+        hardwareAcceleration
+      ]
+    ]);
   }
 
   _addAnEncoder(codec) {
@@ -89,5 +97,9 @@ export class EncodingTest {
 
   scalabilityModeList() {
     return scalabilityModeList;
+  }
+
+  hardwareAccelerationList() {
+    return hardwareAccelerationList;
   }
 }
