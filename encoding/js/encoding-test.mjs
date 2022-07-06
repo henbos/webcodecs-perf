@@ -22,7 +22,7 @@ const hardwareAccelerationList =
 export class EncodingTest {
   constructor() {
     this._mediaStream = null;
-    this._worker = new Worker('js/codecs-worker.mjs?r=29', {type: 'module'});
+    this._worker = new Worker('js/codecs-worker.mjs?r=30', {type: 'module'});
     this.bindEventHandlers();
   }
 

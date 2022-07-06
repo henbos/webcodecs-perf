@@ -3,9 +3,13 @@
 let initialized = false;
 let firstFrame = true;
 // Each item in encodings is an object
-// like {encoder:VideoEncoder,captureTime:[{frameTimeStamp:number, sendToEncoderTime:number}],encodeTime:[ms],encodeTimeIndex:number,firstFrameDelay:number,frameDrop:number}.
+// like {encoder:VideoEncoder,captureTime:[{frameTimeStamp:number, sendToEncoderTime:number}],encodeTime:[ms],encodeTimeIndex:number,firstFrameDelay:number,frameDrop:number,longDelay:number}.
 const encodings = [];
 const recordNumber = 300;
+// Encode time greater than or equal to this value is counted to longDelay field
+// of encoding.
+// Unit: ms.
+const longDelayThreshold = 50;
 
 let resolutions = [[1280, 720], [640, 360], [320, 180]];
 let resolutionsIndex = 0;
@@ -85,6 +89,7 @@ function addEncoder(codec) {
     encodeTimeIndex: 0,
     firstFrameDelay: null,
     frameDrop: 0,
+    longDelay: 0,
   };
   encodings.push(encoding);
   if (!initialized) {
@@ -120,6 +125,10 @@ function printStats() {
     for (let i = 0; i < encodings.length; i++) {
       str += `${encodings[i].frameDrop}, `;
     }
+    str += `\nEncode time >= ${longDelayThreshold}ms: `;
+    for (let i = 0; i < encodings.length; i++) {
+      str += `${encodings[i].longDelay}, `;
+    }
     postMessage(['stats', [str]]);
   }, 1000);
 }
@@ -137,8 +146,13 @@ function videoChunkOutputCallback(encoderIndex, chunk, metadata) {
     console.warn('Unexpected chunk.');
     return;
   }
-  encoding.encodeTime[(encoding.encodeTimeIndex++) % recordNumber] =
+  const currentEncodeTime =
       Date.now() - encoding.captureTime[0].sendToEncoderTime;
+  encoding.encodeTime[(encoding.encodeTimeIndex++) % recordNumber] =
+      currentEncodeTime;
+  if (currentEncodeTime >= longDelayThreshold) {
+    encoding.longDelay += 1;
+  }
   encoding.encodeTimeIndex %= recordNumber;
   if (!encoding.firstFrameDelay) {
     encoding.firstFrameDelay =
