@@ -10,6 +10,7 @@ let scalabilityMode;
 let hardwareAcceleration;
 let chunks = [];
 let keyFrameRequested = false;
+let isFirstFrameEver = true;
 
 addEventListener('message', (event) => {
   const [messageType, args] = event.data;
@@ -43,6 +44,12 @@ function configure(newKeyFramesRemaining,
 }
 
 function onRawFrame(frame) {
+  if (isFirstFrameEver) {
+    encoder.encode(frame, { keyFrame: false });
+    frame.close();
+    isFirstFrameEver = false;
+    return;
+  }
   encoder.encode(frame, { keyFrame: (keyFramesRemaining > 0 || keyFrameRequested) ? true : false });
   frame.close();
   if (keyFramesRemaining > 0) {
