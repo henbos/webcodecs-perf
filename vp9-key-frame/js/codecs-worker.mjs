@@ -10,7 +10,7 @@ let scalabilityMode;
 let hardwareAcceleration;
 let chunks = [];
 let keyFrameRequested = false;
-let isFirstFrameEver = true;
+let totalFrameCount = 0;
 
 addEventListener('message', (event) => {
   const [messageType, args] = event.data;
@@ -44,10 +44,16 @@ function configure(newKeyFramesRemaining,
 }
 
 function onRawFrame(frame) {
-  if (isFirstFrameEver) {
+  ++totalFrameCount;
+  // Starting from the second frame, encode with the right resolution-
+  if (totalFrameCount == 2) {
+    reconfigure(resolution[0], resolution[1]);
+  }
+  // Try to encode the first two frames as not key-frames.
+  if (totalFrameCount <= 2) {
+    console.log('Encoding...');
     encoder.encode(frame, { keyFrame: false });
     frame.close();
-    isFirstFrameEver = false;
     return;
   }
   encoder.encode(frame, { keyFrame: (keyFramesRemaining > 0 || keyFrameRequested) ? true : false });
@@ -63,10 +69,16 @@ function initEncoder() {
     output: videoChunkOutputCallback,
     error: encoderErrorCallback
   });
+  // Let's encode the first frame with the wrong resolution.
+  reconfigure(resolution[0] / 2, resolution[1] / 2);
+}
+
+function reconfigure(width, height) {
+  console.log(`Reconfiguring: ${width}x${height}`);
   const encoderConfig = {
     codec: vp9,
-    width: resolution[0],
-    height: resolution[1],
+    width: width,
+    height: height,
     framerate: 30,
     latencyMode: 'realtime',
     scalabilityMode,
