@@ -1,8 +1,9 @@
 'use strict'
 
 const vp9 = 'vp09.00.10.08';
-let encoder, decoder;
+let encoder = null, decoder = null;
 let keyFramesRemaining = 2;
+let keyFramesRemainingSetting = null;
 const recordNumber = 300;
 
 let resolution;
@@ -11,12 +12,16 @@ let hardwareAcceleration;
 let chunks = [];
 let keyFrameRequested = false;
 let isFirstFrameEver = true;
+let delayKeyFrameRequest = false;
 
 addEventListener('message', (event) => {
   const [messageType, args] = event.data;
   switch (messageType) {
     case 'configure':
       configure(...args);
+      break;
+    case 'update-key-frame-mode':
+      updateKeyFrameMode(...args);
       break;
     case 'raw-frame':
       onRawFrame(...args);
@@ -32,25 +37,46 @@ addEventListener('message', (event) => {
   }
 });
 
-function configure(newKeyFramesRemaining,
-  newResolution, newScalabilityMode, newHardwareAcceleration) {
-  keyFramesRemaining = newKeyFramesRemaining;
+function configure(newKeyFramesRemaining, newResolution, newScalabilityMode,
+                   newHardwareAcceleration, newDelayKeyFrameRequest) {
+  console.log('Reconfiguring');
+  keyFramesRemaining = keyFramesRemainingSetting = newKeyFramesRemaining;
   resolution = newResolution;
   scalabilityMode =
     newScalabilityMode == 'L1T1' ? undefined : newScalabilityMode;
   hardwareAcceleration = newHardwareAcceleration;
+  delayKeyFrameRequest = newDelayKeyFrameRequest;
+  isFirstFrameEver = true;
   initEncoder();
   initDecoder();
 }
 
-function onRawFrame(frame) {
-  if (isFirstFrameEver) {
+function updateKeyFrameMode(newKeyFramesRemainingSetting) {
+  keyFramesRemainingSetting = newKeyFramesRemainingSetting;
+}
+
+function onRawFrame(frame, didSwapStream) {
+  if (didSwapStream) {
+    console.log('The stream was just swapped, first frame keyFrame:false.');
+    // Encode one frame like normal.
+    encoder.encode(frame, { keyFrame: false });
+    frame.close();
+    // Subsequently do as many key frames in a row as was last specified.
+    keyFramesRemaining = keyFramesRemainingSetting;
+    return;
+  }
+  if (delayKeyFrameRequest && isFirstFrameEver) {
+    console.log('keyFrame:false');
     encoder.encode(frame, { keyFrame: false });
     frame.close();
     isFirstFrameEver = false;
     return;
   }
-  encoder.encode(frame, { keyFrame: (keyFramesRemaining > 0 || keyFrameRequested) ? true : false });
+  const keyFrame = (keyFramesRemaining > 0 || keyFrameRequested);
+  if (keyFrame) {
+    console.log('keyFrame:true');
+  }
+  encoder.encode(frame, { keyFrame });
   frame.close();
   if (keyFramesRemaining > 0) {
     keyFramesRemaining--;
@@ -59,10 +85,12 @@ function onRawFrame(frame) {
 }
 
 function initEncoder() {
-  encoder = new VideoEncoder({
-    output: videoChunkOutputCallback,
-    error: encoderErrorCallback
-  });
+  if (!encoder) {
+    encoder = new VideoEncoder({
+      output: videoChunkOutputCallback,
+      error: encoderErrorCallback
+    });
+  }
   const encoderConfig = {
     codec: vp9,
     width: resolution[0],
@@ -76,6 +104,9 @@ function initEncoder() {
 }
 
 function initDecoder() {
+  if (decoder) {
+    return;
+  }
   decoder = new VideoDecoder({ output: videoFrameOutputCallback, error: decoderErrorCallback });
   decoder.configure({
     codec: vp9

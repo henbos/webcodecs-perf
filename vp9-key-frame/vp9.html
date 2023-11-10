@@ -17,24 +17,27 @@
 <body>
   <h1>WebCodecs VP9 encoding</h1>
   <p>This is a modified version of <a href="https://jianjunz.github.io/webcodecs-perf/vp9-key-frame/vp9.html">
-  jianjunz's page</a>. The difference is that this page starts with the first
-  frame having keyFrame:false before doing the single or consecutive key
-  frames.</p>
+  jianjunz's page</a>.</p>
   <p>Key frame mode: </p>
-  <p><input type="radio" name="key-frame" value="single"/>single - the first frame is a key frame</p>
-  <p><input type="radio" name="key-frame" id="key-frame-consecutive" value="consecutive" checked/>consecutive - the first two frames are key frames</p>
+  <p><input type="radio" name="key-frame" id="key-frame-none" value="none" checked/>none - up to the encoder</p>
+  <p><input type="radio" name="key-frame" id="key-frame-single" value="single"/>single - the first frame is a key frame</p>
+  <p><input type="radio" name="key-frame" id="key-frame-consecutive" value="consecutive"/>consecutive - the first two frames are key frames</p>
   <p>Resolution: <select id="resolutions-select"></select></p>
   <p style="display:none">Scalability mode: <select id="scalability-select"></select></p>
   <p>Hardware acceleration: <select id="hw-select"></select></p>
   <div class="buttons">
+    <input type="checkbox" id="delay-keyframe-request">Wait one frame before `keyFrame:true`?</input><br/>
     <button type="button" id="start-encoding">Start encoding</button>
     <button type="button" id="key-frame-request">Request a key frame</button>
+    <button type="button" id="swap-camera">Swap camera</button>
   </div>
+  <p>When the camera is swapped, the <i>second</i> frame of the new track will
+  encode with the key frame mode reset (none, single or consecutive).</p>
   <p id="stats"></p>
   <div>
     <p>Left is camera preview, right is WebCodecs encoded and decoded stream</p>
-    <video id="local-preview" controls width="320" height="240"></video>
-    <video id="playback" controls width="320" height="240"></video>
+    <video id="local-preview" autoplay width="320" height="240"></video>
+    <video id="playback" autoplay width="320" height="240"></video>
   </div>
   <script type="module" src="js/vp9.mjs"></script>
 </body>

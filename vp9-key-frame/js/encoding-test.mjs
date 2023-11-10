@@ -12,7 +12,8 @@ const hardwareAccelerationList =
 
 export class EncodingTest {
   constructor() {
-    this._mediaStream = null;
+    this._mediaStreams = null;
+    this._currentStreamIndex = 0;
     this._trackWriter=null;
     this._worker = new Worker('js/codecs-worker.mjs?r=1', {type: 'module'});
     this.bindEventHandlers();
@@ -35,16 +36,36 @@ export class EncodingTest {
     this._trackWriter.write(frame);
   }
 
-  async initMediaStream() {
-    this._mediaStream = await navigator.mediaDevices.getUserMedia({
-      audio: false,
-      video: {
-        width: 1280,
-        height: 720,
-      }
-    });
+  async initMediaStreams() {
+    if (this._mediaStreams != null) {
+      return false;  // Already initialized, no need to do it again.
+    }
+    const width = 1280;
+    const height = 720;
+    this._mediaStreams = [];
+    // Real camera.
+    this._mediaStreams.push(
+    await navigator.mediaDevices.getUserMedia(
+        {audio: false, video: {width, height}}));
+    // Fake camera (green frames).
+    const canvas =
+        document.createElement('canvas', { width, height });
+    const context = canvas.getContext('2d');
+    setInterval(() => {
+      context.fillStyle = `rgb(0,255,0)`;
+      context.fillRect(0, 0, width, height);
+    }, 1000 / 30);
+    this._mediaStreams.push(canvas.captureStream());
+    // Setup decoder to render resulting frames.
     this.initPlayer();
-    return this._mediaStream;
+    return true;
+  }
+
+  currentStream() {
+    return this._mediaStreams[this._currentStreamIndex];
+  }
+  swapCurrentStream() {
+    this._currentStreamIndex = 1 - this._currentStreamIndex;
   }
 
   async initPlayer() {
@@ -53,27 +74,48 @@ export class EncodingTest {
     document.getElementById('playback').srcObject = new MediaStream([mediaStreamTrackGenerator]);
   }
 
-  configure(keyFrames, resolutionsIndex, scalabilityMode, hardwareAcceleration) {
+  configure(keyFrames, resolutionsIndex, scalabilityMode, hardwareAcceleration,
+            delayKeyFrameRequest) {
     this._worker.postMessage([
       'configure',
       [
         keyFrames, resolutionList[resolutionsIndex][1], scalabilityMode,
-        hardwareAcceleration
+        hardwareAcceleration, delayKeyFrameRequest
       ]
     ]);
   }
 
-  async startTest() {
+  onUpdateKeyFrameMode(keyFrames) {
+    this._worker.postMessage(['update-key-frame-mode', [keyFrames]]);
+  }
+
+  startTest() {
+    this.readRawFrames(this._mediaStreams[0]);
+    this.readRawFrames(this._mediaStreams[1]);
+  }
+
+  async readRawFrames(stream) {
     const processor = new MediaStreamTrackProcessor(
-        {track: this._mediaStream.getVideoTracks()[0]});
+        {track: stream.getVideoTracks()[0]});
     const reader = processor.readable.getReader();
+    let prevStream = null;
     while (true) {
       const {value, done} = await reader.read();
       if (done) {
         console.debug('Video track ends.');
         break;
       }
-      this._worker.postMessage(['raw-frame', [value]], [value]);
+      let didSwapStream =
+          prevStream != null && prevStream != this.currentStream();
+      prevStream = this.currentStream();
+      if (this.currentStream() == stream) {
+        // Forward the frame, the worker is responsible for closing it.
+        this._worker.postMessage(
+            ['raw-frame', [value, didSwapStream]], [value]);
+      } else {
+        // Close unwanted frames.
+        value.close();
+      }
     }
   }
 

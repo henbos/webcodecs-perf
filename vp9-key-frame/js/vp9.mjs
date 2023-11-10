@@ -6,21 +6,52 @@ const encodingTest = new EncodingTest();
 
 document.getElementById('start-encoding')
     .addEventListener('click', async () => {
-      const mediaStream = await encodingTest.initMediaStream();
-      const keyFrames = document.getElementById('key-frame-consecutive').checked ? 2 : 1;
+      const isFirstInit = await encodingTest.initMediaStreams();
+      let keyFrames = 'unknown';
+      if (document.getElementById('key-frame-none').checked) {
+        keyFrames = 0;
+      } else if (document.getElementById('key-frame-single').checked) {
+        keyFrames = 1;
+      } else if (document.getElementById('key-frame-consecutive').checked) {
+        keyFrames = 2;
+      }
       encodingTest.configure(keyFrames,
           document.getElementById('resolutions-select').value,
           document.getElementById('scalability-select').value,
-          document.getElementById('hw-select').value);
-      const videoElement = document.getElementById('local-preview');
-      videoElement.srcObject = mediaStream;
-      videoElement.play();
-      document.getElementById('playback').play();
-      encodingTest.startTest();
+          document.getElementById('hw-select').value,
+          document.getElementById('delay-keyframe-request').checked);
+      if (isFirstInit) {
+        const videoElement = document.getElementById('local-preview');
+        videoElement.srcObject = encodingTest.currentStream();
+        encodingTest.startTest();
+      }
     });
 
-document.getElementById('key-frame-request').addEventListener('click',()=>{
+document.getElementById('key-frame-request').addEventListener('click', () => {
   encodingTest.requestKeyFrame();
+});
+
+function updateKeyFrameMode() {
+  let keyFrames = 'unknown';
+  if (document.getElementById('key-frame-none').checked) {
+    keyFrames = 0;
+  } else if (document.getElementById('key-frame-single').checked) {
+    keyFrames = 1;
+  } else if (document.getElementById('key-frame-consecutive').checked) {
+    keyFrames = 2;
+  }
+  encodingTest.onUpdateKeyFrameMode(keyFrames);
+}
+
+document.getElementById('key-frame-none').onclick = updateKeyFrameMode;
+document.getElementById('key-frame-single').onclick = updateKeyFrameMode;
+document.getElementById('key-frame-consecutive').onclick = updateKeyFrameMode;
+
+document.getElementById('swap-camera').addEventListener('click', () => {
+  encodingTest.swapCurrentStream();
+
+  const videoElement = document.getElementById('local-preview');
+  videoElement.srcObject = encodingTest.currentStream();
 });
 
 const resolutionList = encodingTest.resolutionList();
